@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MissileScript : MonoBehaviour
 {
     private GameManager gameManager;
-    void Start()
+
+    private void Start()
     {
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
     }

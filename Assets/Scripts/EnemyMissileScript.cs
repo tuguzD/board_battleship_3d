@@ -1,32 +1,29 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class EnemyMissileScript : MonoBehaviour
 {
-    GameManager gameManager;
-    EnemyScript enemyScript;
+    private GameManager gameManager;
+    private EnemyScript enemyScript;
     public Vector3 targetTileLocation;
     private int targetTile = -1;
 
-    void Start()
+    public void Start()
     {
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
         enemyScript = GameObject.Find("Enemy").GetComponent<EnemyScript>();
-
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ship"))
         {
-            if (collision.gameObject.name == "Submarine") targetTileLocation.y += 0.3f;
+            if (collision.gameObject.name == "Submarine") 
+                targetTileLocation.y += 0.3f;
+            
             gameManager.EnemyHitPlayer(targetTileLocation, targetTile, collision.gameObject);
         }
-        else
-        {
-            enemyScript.PauseAndEnd(targetTile);
-        }
+        else enemyScript.PauseAndEnd(targetTile);
+        
         Destroy(gameObject);
     }
 

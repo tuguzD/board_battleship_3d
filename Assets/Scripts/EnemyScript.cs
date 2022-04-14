@@ -1,14 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+// ReSharper disable CollectionNeverUpdated.Local
 
 public class EnemyScript : MonoBehaviour
 {
-    char[] guessGrid;
-    List<int> potentialHits;
-    List<int> currentHits;
+    private char[] guessGrid;
+    private List<int> potentialHits, currentHits;
     private int guess;
+    
     public GameObject enemyMissilePrefab;
     public GameManager gameManager;
 
@@ -19,37 +19,37 @@ public class EnemyScript : MonoBehaviour
         guessGrid = Enumerable.Repeat('o', 100).ToArray();
     }
 
-    public List<int[]> PlaceEnemyShips()
+    public static List<int[]> PlaceEnemyShips()
     {
-        List<int[]> enemyShips = new List<int[]>
+        var enemyShips = new List<int[]>
         {
-            new int[]{-1, -1, -1, -1, -1},
-            new int[]{-1, -1, -1, -1},
-            new int[]{-1, -1, -1},
-            new int[]{-1, -1, -1},
-            new int[]{-1, -1}
+            new [] {-1, -1, -1, -1, -1},
+            new [] {-1, -1, -1, -1},
+            new [] {-1, -1, -1},
+            new [] {-1, -1, -1},
+            new [] {-1, -1}
         };
-        int[] gridNumbers = Enumerable.Range(1, 100).ToArray();
-        bool taken = true;
-        foreach(int[] tileNumArray in enemyShips)
+        var gridNumbers = Enumerable.Range(1, 100).ToArray();
+        foreach (var tileNumArray in enemyShips)
         {
-            taken = true;
-            while(taken == true)
+            var taken = true;
+            while (taken)
             {
                 taken = false;
-                int shipNose = UnityEngine.Random.Range(0, 99);
-                int rotateBool = UnityEngine.Random.Range(0, 2);
-                int minusAmount = rotateBool == 0 ? 10 : 1;
-                for(int i = 0; i < tileNumArray.Length; i++)
+                var shipNose = Random.Range(0, 99);
+                var rotateBool = Random.Range(0, 2);
+                var minusAmount = rotateBool == 0 ? 10 : 1;
+                for (var i = 0; i < tileNumArray.Length; i++)
                 {
                     // check that ship end will not go off board and check if tile is taken
-                    if((shipNose - (minusAmount * i)) < 0 || gridNumbers[shipNose - i * minusAmount] < 0)
+                    if (shipNose - minusAmount * i < 0 || 
+                        gridNumbers[shipNose - i * minusAmount] < 0)
                     {
                         taken = true;
                         break;
                     }
                     // Ship is horizontal, check ship doesnt go off the sides 0 to 10, 11 to 20
-                    else if(minusAmount == 1 && shipNose /10 != ((shipNose - i * minusAmount)-1) / 10)
+                    if (minusAmount == 1 && shipNose / 10 != ((shipNose - i * minusAmount) - 1) / 10)
                     {
                         taken = true;
                         break;
@@ -58,7 +58,7 @@ public class EnemyScript : MonoBehaviour
                 // if tile is not taken, loop through tile numbers assign them to the array in the list
                 if (taken == false)
                 {
-                    for(int j = 0; j < tileNumArray.Length; j++)
+                    for (var j = 0; j < tileNumArray.Length; j++)
                     {
                         tileNumArray[j] = gridNumbers[shipNose - j * minusAmount];
                         gridNumbers[shipNose - j * minusAmount] = -1;
@@ -66,96 +66,120 @@ public class EnemyScript : MonoBehaviour
                 }
             }
         }
-        foreach(var x in enemyShips)
-        {
+        foreach (var x in enemyShips)
             Debug.Log("x: " + x[0]);
-        }
+        
         return enemyShips;
     }
 
-    public void NPCTurn()
+    public void NpcTurn()
     {
-        List<int> hitIndex = new List<int>();
-        for(int i = 0; i < guessGrid.Length; i++)
-        {
+        var hitIndex = new List<int>();
+        for (var i = 0; i < guessGrid.Length; i++)
             if (guessGrid[i] == 'h') hitIndex.Add(i);
-        }
-        if(hitIndex.Count > 1)
+
+        switch (hitIndex.Count)
         {
-            int diff = hitIndex[1] - hitIndex[0];
-            int posNeg = Random.Range(0, 2) * 2 - 1;
-            int nextIndex = hitIndex[0] + diff;
-            while(guessGrid[nextIndex] != 'o')
-            {
-                if(guessGrid[nextIndex] == 'm' || nextIndex > 100 || nextIndex < 0)
+            case var n when n > 1:
+                var diff = hitIndex[1] - hitIndex[0];
+                var nextIndexMore = hitIndex[0] + diff;
+                while (guessGrid[nextIndexMore] != 'o')
                 {
-                    diff *= -1;
+                    if (guessGrid[nextIndexMore] == 'm' || nextIndexMore > 100 || nextIndexMore < 0)
+                        diff *= -1;
+                
+                    nextIndexMore += diff;
                 }
-                nextIndex += diff;
-            }
-            guess = nextIndex;
+                guess = nextIndexMore;
+                break;
+            
+            case 1:
+                var closeTiles = new List<int> {1, -1, 10, -10};
+
+                var index = Random.Range(0, closeTiles.Count);
+                var possibleGuess = hitIndex[0] + closeTiles[index];
+                var onGrid = possibleGuess > -1 && possibleGuess < 100;
+            
+                while ((!onGrid || guessGrid[possibleGuess] != 'o') && closeTiles.Count > 0)
+                {
+                    closeTiles.RemoveAt(index);
+                    index = Random.Range(0, closeTiles.Count);
+                    possibleGuess = hitIndex[0] + closeTiles[index];
+                    onGrid = possibleGuess > -1 && possibleGuess < 100;
+                }
+                guess = possibleGuess;
+                break;
+            
+            case var n when n < 1:
+                var nextIndexLess = Random.Range(0, 100);
+                while (guessGrid[nextIndexLess] != 'o')
+                    nextIndexLess = Random.Range(0, 100);
+                
+                nextIndexLess = GuessAgainCheck(nextIndexLess);
+                Debug.Log(" --- ");
+                
+                nextIndexLess = GuessAgainCheck(nextIndexLess);
+                Debug.Log(" -########-- ");
+                
+                guess = nextIndexLess;
+                break;
         }
-        else if (hitIndex.Count == 1)
-        {
-            List<int> closeTiles = new List<int>();
-            closeTiles.Add(1); closeTiles.Add(-1); closeTiles.Add(10); closeTiles.Add(-10);
-            int index = Random.Range(0, closeTiles.Count);
-            int possibleGuess = hitIndex[0] + closeTiles[index];
-            bool onGrid = possibleGuess > -1 && possibleGuess < 100;
-            while((!onGrid || guessGrid[possibleGuess] != 'o') && closeTiles.Count > 0){
-                closeTiles.RemoveAt(index);
-                index = Random.Range(0, closeTiles.Count);
-                possibleGuess = hitIndex[0] + closeTiles[index];
-                onGrid = possibleGuess > -1 && possibleGuess < 100;
-            }
-            guess = possibleGuess;
-        }
-        else
-        {
-            int nextIndex = Random.Range(0, 100);
-            while(guessGrid[nextIndex] != 'o') nextIndex = Random.Range(0, 100);
-            nextIndex = GuessAgainCheck(nextIndex);
-            Debug.Log(" --- ");
-            nextIndex = GuessAgainCheck(nextIndex);
-            Debug.Log(" -########-- ");
-            guess = nextIndex;
-        }
-        GameObject tile = GameObject.Find("Tile (" + (guess + 1) + ")");
+        
+        var tile = GameObject.Find($"Tile ({guess + 1})");
         guessGrid[guess] = 'm';
-        Vector3 vec = tile.transform.position;
+        var position = tile.transform.position;
+        
+        var vec = position;
         vec.y += 15;
-        GameObject missile = Instantiate(enemyMissilePrefab, vec, enemyMissilePrefab.transform.rotation);
+        
+        var missile = 
+            Instantiate(enemyMissilePrefab, vec, enemyMissilePrefab.transform.rotation);
+        
         missile.GetComponent<EnemyMissileScript>().SetTarget(guess);
-        missile.GetComponent<EnemyMissileScript>().targetTileLocation = tile.transform.position;
+        missile.GetComponent<EnemyMissileScript>().targetTileLocation = position;
     }
 
     private int GuessAgainCheck(int nextIndex)
     {
-        string str = "nx: " + nextIndex;
-        int newGuess = nextIndex;
-        bool edgeCase = nextIndex < 10 || nextIndex > 89 || nextIndex % 10 == 0 || nextIndex % 10 == 9;
-        bool nearGuess = false;
-        if (nextIndex + 1 < 100) nearGuess = guessGrid[nextIndex + 1] != 'o';
-        if (!nearGuess && nextIndex - 1 > 0) nearGuess = guessGrid[nextIndex - 1] != 'o';
-        if (!nearGuess && nextIndex + 10 < 100) nearGuess = guessGrid[nextIndex + 10] != 'o';
-        if (!nearGuess && nextIndex - 10 > 0) nearGuess = guessGrid[nextIndex - 10] != 'o';
-        if (edgeCase || nearGuess) newGuess = Random.Range(0, 100);
-        while (guessGrid[newGuess] != 'o') newGuess = Random.Range(0, 100);
-        Debug.Log(str + " newGuess: " + newGuess + " e:" + edgeCase + " g:" + nearGuess);
+        var newGuess = nextIndex;
+        var edgeCase =
+            nextIndex < 10 || nextIndex > 89 || 
+            nextIndex % 10 == 0 || nextIndex % 10 == 9;
+        
+        var nearGuess = false;
+        
+        if (nextIndex + 1 < 100) 
+            nearGuess = guessGrid[nextIndex + 1] != 'o';
+        
+        if (!nearGuess && nextIndex - 1 > 0) 
+            nearGuess = guessGrid[nextIndex - 1] != 'o';
+        
+        if (!nearGuess && nextIndex + 10 < 100) 
+            nearGuess = guessGrid[nextIndex + 10] != 'o';
+        
+        if (!nearGuess && nextIndex - 10 > 0) 
+            nearGuess = guessGrid[nextIndex - 10] != 'o';
+
+        if (nearGuess || edgeCase)
+            newGuess = Random.Range(0, 100);
+
+        while (guessGrid[newGuess] != 'o')
+            newGuess = Random.Range(0, 100);
+        
+        Debug.Log($"nx: {nextIndex} newGuess: {newGuess} e: {edgeCase} g: {nearGuess}");
+        
         return newGuess;
     }
     public void MissileHit(int hit)
     {
         guessGrid[guess] = 'h';
-        Invoke("EndTurn", 1.0f);
+        Invoke(nameof(EndTurn), 1.0f);
     }
 
     public void SunkPlayer()
     {
-        for(int i = 0; i < guessGrid.Length; i++)
-        {
+        for (var i = 0; i < guessGrid.Length; i++)
             if (guessGrid[i] == 'h') guessGrid[i] = 'x';
-        }
     }
 
     private void EndTurn()
@@ -165,19 +189,16 @@ public class EnemyScript : MonoBehaviour
 
     public void PauseAndEnd(int miss)
     {
-        if(currentHits.Count > 0 && currentHits[0] > miss)
-        {
-            foreach(int potential in potentialHits)
+        if (currentHits.Count > 0 && currentHits[0] > miss)
+            foreach (var potential in potentialHits)
             {
-                if(currentHits[0] > miss)
+                var condition = currentHits[0] > miss;
+                if ((condition && potential < miss) || 
+                    (!condition && potential > miss))
                 {
-                    if (potential < miss) potentialHits.Remove(potential);
-                } else
-                {
-                    if (potential > miss) potentialHits.Remove(potential);
+                    potentialHits.Remove(potential);
                 }
             }
-        }
-        Invoke("EndTurn", 1.0f);
+        Invoke(nameof(EndTurn), 1.0f);
     }
 }
