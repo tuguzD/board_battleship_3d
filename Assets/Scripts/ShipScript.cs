@@ -6,29 +6,36 @@ public class ShipScript : MonoBehaviour
     public float xOffset, zOffset;
     private float nextZRotation = 90f;
     private GameObject clickedTile;
-    
+
+    private Outline outline;
+    private readonly Color32 outlineColor = new Color32(255, 130, 50, 255);
+
     private int hitCount;
     public int shipSize;
 
-    private Material[] materials;
-
     private readonly List<GameObject> touchTiles = new List<GameObject>();
-    private readonly List<Color> colors = new List<Color>();
 
     private void Start()
     {
-        materials = GetComponent<Renderer>().materials;
-        
-        foreach (var material in materials)
-            colors.Add(material.color);
+        outline = GetComponent<Outline>();
     }
-    
-    private void OnCollisionEnter(Collision collision)
+
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("Tile"))
+        if (other.gameObject.CompareTag("Tile"))
         {
-            touchTiles.Add(collision.gameObject);
+            touchTiles.Add(other.gameObject);
         }
+    }
+
+    private void OnMouseEnter()
+    {
+        outline.enabled = true;
+    }
+
+    private void OnMouseExit()
+    {
+        outline.enabled = false;
     }
 
     public void ClearTileList()
@@ -38,7 +45,7 @@ public class ShipScript : MonoBehaviour
 
     public Vector3 GetOffsetVec(Vector3 tilePos)
     {
-        return new Vector3(tilePos.x + xOffset, 2, tilePos.z + zOffset);
+        return new Vector3(tilePos.x + xOffset, tilePos.y + 4, tilePos.z + zOffset);
     }
 
     public void RotateShip()
@@ -48,15 +55,11 @@ public class ShipScript : MonoBehaviour
         
         transform.localEulerAngles += new Vector3(0, 0, nextZRotation);
         nextZRotation *= -1;
-        
         (xOffset, zOffset) = (zOffset, xOffset);
-        SetPosition(clickedTile.transform.position);
-    }
-
-    private void SetPosition(Vector3 newVec)
-    {
+        
         ClearTileList();
-        transform.localPosition = new Vector3(newVec.x + xOffset, 2, newVec.z + zOffset);
+        transform.localPosition = GetOffsetVec(clickedTile.transform.position);
+        // transform.rotation = Quaternion.Euler(-90, 0, nextZRotation);
     }
 
     public void SetClickedTile(GameObject tile)
@@ -75,18 +78,17 @@ public class ShipScript : MonoBehaviour
         return shipSize <= hitCount;
     }
 
-    public void FlashColor(Color tempColor)
+    public void FlashOutline(Color tempColor)
     {
-        foreach (var mat in materials)
-            mat.color = tempColor;
-        
-        Invoke(nameof(ResetColor), 0.5f);
+        outline.OutlineColor = tempColor;
+        outline.enabled = true;
+
+        Invoke(nameof(ResetOutline), 0.5f);
     }
 
-    private void ResetColor()
+    private void ResetOutline()
     {
-        var i = 0;
-        foreach (var mat in materials)
-            mat.color = colors[i++];
+        outline.OutlineColor = outlineColor;
+        outline.enabled = false;
     }
 }

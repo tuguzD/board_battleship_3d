@@ -2,12 +2,16 @@
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] [Range(0, 50)] private float movementSpeed = 25;
-    [SerializeField] [Range(0, 50)] private float accelerationSpeed = 25;
-    [SerializeField] [Range(0, 50)] private float rotationSpeed = 25;
+    [SerializeField] [Range(0, 50)] 
+    private float movementSpeed = 25;
 
-    private float rollInput, activeForwardSpeed, 
-        activeStrafeSpeed, activeHoverSpeed;
+    [SerializeField] [Range(0, 50)] 
+    private float accelerationSpeed = 25;
+
+    [SerializeField] [Range(0, 50)]
+    private float rotationSpeed = 25;
+
+    private float rollInput, activeForwardSpeed, activeStrafeSpeed, activeHoverSpeed;
     private Vector2 lookInput, screenCenter, mouseDistance;
 
     private float multiplier = .5f;

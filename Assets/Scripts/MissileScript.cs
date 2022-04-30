@@ -9,9 +9,9 @@ public class MissileScript : MonoBehaviour
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        gameManager.CheckHit(collision.gameObject);
+        gameManager.CheckHit(other.gameObject);
         Destroy(gameObject);
     }
 }

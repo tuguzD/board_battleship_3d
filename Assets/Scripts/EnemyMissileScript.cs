@@ -20,7 +20,7 @@ public class EnemyMissileScript : MonoBehaviour
             if (collision.gameObject.name == "Submarine") 
                 targetTileLocation.y += 0.3f;
             
-            gameManager.EnemyHitPlayer(targetTileLocation, targetTile, collision.gameObject);
+            gameManager.EnemyHitPlayer(targetTileLocation, collision.gameObject);
         }
         else enemyScript.PauseAndEnd(targetTile);
         

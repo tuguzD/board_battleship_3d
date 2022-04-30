@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
     public Text topText, playerShipText, enemyShipText;
 
     [Header("Objects")]
-    public GameObject missilePrefab, firePrefab, woodDock;
+    public GameObject missilePrefab, firePrefab, woodDock, audioPlayer;
 
     private bool setupComplete,
         playerTurn = true;
@@ -33,8 +33,8 @@ public class GameManager : MonoBehaviour
         enemyShipCount = 5,
         playerShipCount = 5;
 
-    private readonly Color32
-        green = new Color32(38, 57, 76, 255),
+    private readonly Color
+        gray = new Color32(38, 57, 76, 255),
         brown = new Color32(68, 0, 0, 255);
 
     private void Start()
@@ -51,14 +51,14 @@ public class GameManager : MonoBehaviour
     private void NextShipClicked()
     {
         if (!shipScript.OnGameBoard())
-            shipScript.FlashColor(Color.red);
+            shipScript.FlashOutline(Color.red);
         else
         {
             if (shipIndex <= ships.Length - 2)
             {
                 shipIndex++;
                 shipScript = ships[shipIndex].GetComponent<ShipScript>();
-                shipScript.FlashColor(Color.yellow);
+                shipScript.FlashOutline(Color.yellow);
             }
             else
             {
@@ -66,7 +66,7 @@ public class GameManager : MonoBehaviour
                 nextBtn.gameObject.SetActive(false);
                 woodDock.SetActive(false);
                 
-                topText.text = "Guess an enemy tile.";
+                topText.text = "Guess an ENEMY tile.";
                 setupComplete = true;
                 
                 foreach (var ship in ships)
@@ -83,7 +83,8 @@ public class GameManager : MonoBehaviour
                 var tilePos = tile.transform.position;
                 tilePos.y += 15;
                 playerTurn = false;
-                Instantiate(missilePrefab, tilePos, missilePrefab.transform.rotation);
+                Instantiate(missilePrefab, tilePos + Vector3.back / 2, 
+                    missilePrefab.transform.rotation);
                 break;
             
             case false:
@@ -100,6 +101,7 @@ public class GameManager : MonoBehaviour
         
         var newVec = shipScript.GetOffsetVec(tile.transform.position);
         ships[shipIndex].transform.localPosition = newVec;
+        // ships[shipIndex].transform.rotation = Quaternion.Euler(-90, 0, 0);
     }
 
     private void RotateClicked()
@@ -134,14 +136,17 @@ public class GameManager : MonoBehaviour
             {
                 case var n when n == tileNumArray.Length:
                     enemyShipCount--;
-                    topText.text = "SUNK!!!!!!";
                     enemyFires.Add(Instantiate(firePrefab, tile.transform.position, Quaternion.identity));
+                    
+                    topText.text = "SUNK !!!";
+                    audioPlayer.GetComponents<AudioSource>()[1].Play();
                     tile.GetComponent<TileScript>().SetTileColor(1, brown);
                     tile.GetComponent<TileScript>().SwitchColors(1);
                     break;
                     
                 default:
-                    topText.text = "HIT!!";
+                    topText.text = "HIT !!!";
+                    audioPlayer.GetComponents<AudioSource>()[2].Play();
                     tile.GetComponent<TileScript>().SetTileColor(1, Color.red);
                     tile.GetComponent<TileScript>().SwitchColors(1);
                     break;
@@ -151,16 +156,16 @@ public class GameManager : MonoBehaviour
         
         if (hitCount == 0)
         {
-            tile.GetComponent<TileScript>().SetTileColor(1, green);
+            tile.GetComponent<TileScript>().SetTileColor(1, gray);
             tile.GetComponent<TileScript>().SwitchColors(1);
-            topText.text = "Missed, there is no ship there.";
+            topText.text = "MISS !!!";
         }
         Invoke(nameof(EndPlayerTurn), 1.0f);
     }
 
-    public void EnemyHitPlayer(Vector3 tile, int tileNum, GameObject hitObj)
+    public void EnemyHitPlayer(Vector3 tile, GameObject hitObj)
     {
-        enemyScript.MissileHit(tileNum);
+        enemyScript.MissileHit();
         tile.y += 0.2f;
         playerFires.Add(Instantiate(firePrefab, tile, Quaternion.identity));
         
@@ -169,6 +174,12 @@ public class GameManager : MonoBehaviour
             playerShipCount--;
             playerShipText.text = playerShipCount.ToString();
             enemyScript.SunkPlayer();
+            
+            audioPlayer.GetComponents<AudioSource>()[1].Play();
+        }
+        else
+        {
+            audioPlayer.GetComponents<AudioSource>()[2].Play();
         }
         Invoke(nameof(EndEnemyTurn), 2.0f);
     }
@@ -177,20 +188,20 @@ public class GameManager : MonoBehaviour
     {
         SetActive(true);
         enemyShipText.text = enemyShipCount.ToString();
-        topText.text = "Enemy's turn";
+        topText.text = "Enemy turn";
         
         enemyScript.NpcTurn();
         ColorAllTiles(0);
         
         if (playerShipCount < 1) 
-            GameOver("ENEMY WINs!!!");
+            GameOver("ENEMY WIN!!!");
     }
 
     public void EndEnemyTurn()
     {
         SetActive(false);
         playerShipText.text = playerShipCount.ToString();
-        topText.text = "Select a tile";
+        topText.text = "Your turn";
         
         playerTurn = true;
         ColorAllTiles(1);
@@ -218,7 +229,7 @@ public class GameManager : MonoBehaviour
 
     private void GameOver(string winner)
     {
-        topText.text = "Game Over: " + winner;
+        topText.text = "Game ended: " + winner;
         replayBtn.gameObject.SetActive(true);
         playerTurn = false;
     }

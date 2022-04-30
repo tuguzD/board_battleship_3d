@@ -132,8 +132,8 @@ public class EnemyScript : MonoBehaviour
         var vec = position;
         vec.y += 15;
         
-        var missile = 
-            Instantiate(enemyMissilePrefab, vec, enemyMissilePrefab.transform.rotation);
+        var missile = Instantiate(enemyMissilePrefab, 
+            vec + Vector3.back / 2, enemyMissilePrefab.transform.rotation);
         
         missile.GetComponent<EnemyMissileScript>().SetTarget(guess);
         missile.GetComponent<EnemyMissileScript>().targetTileLocation = position;
@@ -170,7 +170,7 @@ public class EnemyScript : MonoBehaviour
         
         return newGuess;
     }
-    public void MissileHit(int hit)
+    public void MissileHit()
     {
         guessGrid[guess] = 'h';
         Invoke(nameof(EndTurn), 1.0f);
