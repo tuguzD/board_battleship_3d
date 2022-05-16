@@ -86,7 +86,7 @@ public class ShipScript : MonoBehaviour
         Invoke(nameof(ResetOutline), 0.5f);
     }
 
-    private void ResetOutline()
+    public void ResetOutline()
     {
         outline.OutlineColor = outlineColor;
         outline.enabled = false;

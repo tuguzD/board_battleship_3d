@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -15,6 +16,7 @@ public class MainMenuScript : MonoBehaviour
     
     public void ReturnMenu()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+        PhotonNetwork.Disconnect();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 3);
     }
 }

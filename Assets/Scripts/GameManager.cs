@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Photon.Pun;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -195,6 +196,11 @@ public class GameManager : MonoBehaviour
         
         if (playerShipCount < 1) 
             GameOver("ENEMY WIN!!!");
+        
+        foreach (var ship in ships)
+        {
+            ship.GetComponent<ShipScript>().ResetOutline();
+        }
     }
 
     public void EndEnemyTurn()
@@ -236,6 +242,6 @@ public class GameManager : MonoBehaviour
 
     private static void ReplayClicked()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        PhotonNetwork.LoadLevel(SceneManager.GetActiveScene().name);
     }
 }
